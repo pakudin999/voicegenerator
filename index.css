@@ -234,7 +234,7 @@ button:disabled {
 
 /* Panel Sections */
 .panel-description {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   line-height: 1.6;
   padding: var(--space-sm);
