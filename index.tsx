@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Modality } from '@google/genai';
 
 // Global state
 const generatedAssetUrls: {url: string; filename: string}[] = [];
@@ -51,12 +51,6 @@ const voiceScriptInput = document.querySelector(
 const voiceSelect = document.querySelector(
   '#voice-select',
 ) as HTMLSelectElement;
-const voiceTemperature = document.querySelector(
-  '#voice-temperature',
-) as HTMLInputElement;
-const temperatureValue = document.querySelector(
-  '#temperature-value',
-) as HTMLSpanElement;
 
 // Utility Functions
 async function delay(ms: number): Promise<void> {
@@ -78,16 +72,18 @@ async function retryWithBackoff<T>(
   onRetry: (attempt: number, delay: number) => void,
 ): Promise<T> {
   let attempt = 1;
+  let delayMs = 1000; // Start with 1 second
+  const maxDelayMs = 16000; // Max 16 seconds
+
   while (true) {
     try {
       return await fn();
     } catch (e) {
-      console.warn(`Attempt ${attempt} failed. Aggressive retry...`, e);
-      // Aggressive retry with 0.3ms delay for burst retries
-      const delayMs = 0.3;
+      console.warn(`Attempt ${attempt} failed. Retrying in ${delayMs}ms...`, e);
       onRetry(attempt, delayMs);
       await delay(delayMs);
       attempt++;
+      delayMs = Math.min(delayMs * 2, maxDelayMs);
     }
   }
 }
@@ -147,63 +143,28 @@ function pcmToWav(base64PCM: string): Blob {
 async function generateTTSAudio(
   text: string,
   voiceName: string,
-  temperature: number,
 ): Promise<{url: string; filename: string} | null> {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey || !text) return null;
-
-  const MODEL_ID = 'gemini-2.5-flash-preview-tts';
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${apiKey}`;
-
-  // Clamp temperature between 0 and 2 as per API requirements
-  const clampedTemperature = Math.max(0, Math.min(2, temperature));
-
-  const requestBody = {
-    contents: [
-      {
-        parts: [
-          {
-            text: text
-          }
-        ]
-      }
-    ],
-    generationConfig: {
-      responseModalities: ["AUDIO"],
-      temperature: clampedTemperature,
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: voiceName
-          }
-        }
-      }
-    },
-    model: MODEL_ID
-  };
+  if (!text) return null;
 
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: text }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: voiceName,
+            },
+          },
+        },
       },
-      body: JSON.stringify(requestBody),
     });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('TTS API Error:', errorBody);
-      throw new Error(`TTS API request failed: ${response.statusText}`);
-    }
-
-    const responseData = await response.json();
-    console.log('TTS API Response:', responseData);
-
-    // Extract audio data from the response
-    const candidate = responseData.candidates?.[0];
-    const audioData = candidate?.content?.parts?.[0]?.inlineData?.data;
+    const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
     if (audioData) {
       // Convert base64 PCM to WAV format for browser playback
@@ -212,32 +173,24 @@ async function generateTTSAudio(
       const filename = `voice-${Date.now()}.wav`;
       return {url: objectURL, filename};
     } else {
-      console.warn('No audio content found in TTS response:', responseData);
+      console.warn('No audio content found in TTS response:', response);
       return null;
     }
   } catch (error) {
     console.error('Failed to generate TTS audio:', error);
-    return null;
+    throw error;
   }
 }
 
 async function generateVoice() {
   const scriptText = voiceScriptInput.value.trim();
   const selectedVoice = voiceSelect.value;
-  const temperature = parseFloat(voiceTemperature.value);
   
   globalStatusEl.textContent = '';
   globalStatusEl.style.color = '';
 
   if (!scriptText) {
     globalStatusEl.innerText = 'Please enter a script to generate voice.';
-    return;
-  }
-
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    globalStatusEl.innerText =
-      'Error: API Key is not configured. Please contact the administrator.';
     return;
   }
 
@@ -261,7 +214,7 @@ async function generateVoice() {
   try {
     setLoadingState(statusEl, 'Generating voice');
     const audioData = await retryWithBackoff(
-      () => generateTTSAudio(scriptText, selectedVoice, temperature),
+      () => generateTTSAudio(scriptText, selectedVoice),
       onRetryCallback,
     );
     
@@ -295,7 +248,7 @@ async function generateVoice() {
       voiceInfoDisplay.className = 'voice-info';
       voiceInfoDisplay.innerHTML = `
         <div class="voice-details">
-          <strong>Voice:</strong> ${selectedVoice} | <strong>Temperature:</strong> ${temperature}
+          <strong>Voice:</strong> ${selectedVoice}
         </div>
         <div class="script-preview">${scriptText}</div>
       `;
@@ -362,12 +315,6 @@ function setupEventListeners() {
 
   // Main generate button
   generateButton.addEventListener('click', generateVoice);
-
-  // Voice temperature slider
-  voiceTemperature.addEventListener('input', (e) => {
-    const target = e.target as HTMLInputElement;
-    temperatureValue.textContent = target.value;
-  });
 
   // Support button
   supportBtn.addEventListener('click', () => {

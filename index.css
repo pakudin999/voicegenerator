@@ -339,11 +339,6 @@ input[type="range"]::-moz-range-thumb {
   margin-top: var(--space-xs);
 }
 
-#temperature-value {
-  color: var(--accent-primary);
-  font-weight: 600;
-}
-
 /* Generate Button Wrapper */
 .generate-button-wrapper {
   margin-top: auto;
