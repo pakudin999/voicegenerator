@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Voice Generation Studio</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="index.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.sh/@google/genai@^1.4.0"
+        }
+      }
+    </script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <header>
+      <div class="logo">@konten_beban</div>
+      <button id="support-btn" class="btn-secondary">Support</button>
+    </header>
+
+    <main>
+      <section id="generator-section">
+        <div class="generator-app">
+          <!-- Left Column: Control Panel -->
+          <div class="control-panel">
+            
+            <!-- Voice Generator Panel -->
+            <div id="voice-mode-panel">
+              <p class="panel-description">
+                Generate natural speech from text using Gemini TTS models. Choose from 30 different voices with various characteristics and styles.
+              </p>
+              <div class="film-input-group">
+                <label for="voice-script-input">Script Text</label>
+                <textarea
+                  id="voice-script-input"
+                  class="prompt-input"
+                  placeholder="Say cheerfully: Have a wonderful day!"
+                  rows="4"
+                ></textarea>
+                <p class="input-info">Use natural language to control style, tone, and emotion.</p>
+              </div>
+              <div class="film-input-group">
+                <label for="voice-select">Voice Character</label>
+                <select id="voice-select">
+                  <optgroup label="Bright & Upbeat">
+                    <option value="Zephyr">Zephyr - Bright</option>
+                    <option value="Puck">Puck - Upbeat</option>
+                    <option value="Autonoe">Autonoe - Bright</option>
+                    <option value="Laomedeia">Laomedeia - Upbeat</option>
+                  </optgroup>
+                  <optgroup label="Firm & Strong">
+                    <option value="Kore">Kore - Firm</option>
+                    <option value="Orus">Orus - Firm</option>
+                    <option value="Alnilam">Alnilam - Firm</option>
+                  </optgroup>
+                  <optgroup label="Smooth & Clear">
+                    <option value="Aoede">Aoede - Breezy</option>
+                    <option value="Algieba">Algieba - Smooth</option>
+                    <option value="Erinome">Erinome - Clear</option>
+                    <option value="Iapetus">Iapetus - Clear</option>
+                    <option value="Despina">Despina - Smooth</option>
+                  </optgroup>
+                  <optgroup label="Easy-going & Casual">
+                    <option value="Umbriel">Umbriel - Easy-going</option>
+                    <option value="Callirrhoe">Callirrhoe - Easy-going</option>
+                    <option value="Zubenelgenubi">Zubenelgenubi - Casual</option>
+                  </optgroup>
+                  <optgroup label="Informative & Knowledgeable">
+                    <option value="Charon">Charon - Informative</option>
+                    <option value="Rasalgethi">Rasalgethi - Informative</option>
+                    <option value="Sadaltager">Sadaltager - Knowledgeable</option>
+                  </optgroup>
+                  <optgroup label="Soft & Gentle">
+                    <option value="Achernar">Achernar - Soft</option>
+                    <option value="Enceladus">Enceladus - Breathy</option>
+                    <option value="Vindemiatrix">Vindemiatrix - Gentle</option>
+                    <option value="Sulafat">Sulafat - Warm</option>
+                  </optgroup>
+                  <optgroup label="Special Characteristics">
+                    <option value="Fenrir">Fenrir - Excitable</option>
+                    <option value="Leda">Leda - Youthful</option>
+                    <option value="Schedar">Schedar - Even</option>
+                    <option value="Achird">Achird - Friendly</option>
+                    <option value="Gacrux">Gacrux - Mature</option>
+                    <option value="Sadachbia">Sadachbia - Lively</option>
+                    <option value="Algenib">Algenib - Gravelly</option>
+                    <option value="Pulcherrima">Pulcherrima - Forward</option>
+                  </optgroup>
+                </select>
+                <p class="input-info">Each voice has unique characteristics for different moods and styles.</p>
+              </div>
+              <div class="film-input-group">
+                <label for="voice-temperature">Speech Variation (Temperature)</label>
+                <input type="range" id="voice-temperature" min="0" max="2" step="0.1" value="1.0" />
+                <div class="range-labels">
+                  <span>Consistent (0)</span>
+                  <span id="temperature-value">1.0</span>
+                  <span>Varied (2)</span>
+                </div>
+                <p class="input-info">Higher values create more natural speech variation.</p>
+              </div>
+            </div>
+
+            <div class="generate-button-wrapper">
+              <button id="generate-button">Generate Voice</button>
+              <p id="global-status"></p>
+            </div>
+          </div>
+
+          <!-- Right Column: Results Panel -->
+          <div class="results-panel">
+            <div class="results-header">
+              <h2>Generated Audio</h2>
+            </div>
+            <div id="results-container">
+              <!-- Audio result cards will be dynamically inserted here -->
+              <div class="placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="m12 8-9.04 4.52a1 1 0 0 0 0 1.78L12 19.2a.72.72 0 0 0 .72 0L22 14.26a1 1 0 0 0 0-1.78L12 8z"></path><path d="M12 14.9v5.3"></path></svg>
+                <p>Your generated audio will appear here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="support-section" class="hidden">
+        <div class="support-content">
+          <button id="close-support-btn" class="close-btn" aria-label="Close support window">&times;</button>
+          <h2>Support & Community</h2>
+          <p class="subtitle">
+            For tutorials, inspiration, and to connect with other creators, find us on TikTok. We're actively sharing tips and showcasing amazing work from the community!
+          </p>
+          <a href="https://www.tiktok.com/@veogentool" target="_blank" rel="noopener noreferrer" class="btn-primary-large tiktok-link">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.01.96-.02 1.92-.02 2.88.02 1.66-.24 3.32-.82 4.89-1.57 4.22-5.54 6.55-9.84 6.03-4.23-.5-7.6-3.8-8.08-8.03-.47-4.15 2.11-8.11 6.13-9.49.02-.95.03-1.9.02-2.85-.01-1.14.99-2.09 2.12-2.08s2.11.95 2.11 2.08c0 .96-.01 1.92-.02 2.88.24-.14.48-.28.72-.42 1.1-1.04 2.3-1.92 3.3-3.01.21-.23.4-.48.59-.72-1.31-.01-2.62 0-3.93-.01Z"></path>
+            </svg>
+            Follow @veogentool
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
