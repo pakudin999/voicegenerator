@@ -14,7 +14,7 @@
   --bg-primary: #121212; /* Very dark grey, not pure black */
   --bg-secondary: #1E1E1E; /* Panel backgrounds */
   --bg-tertiary: #2C2C2C; /* Card/item backgrounds */
-  --bg-overlay: rgba(18, 18, 18, 0.8);
+  --bg-overlay: rgba(18, 18,, 18, 0.8);
 
   /* A less intense, modern green */
   --accent-primary: #2ECC71; /* A nice, balanced green */
@@ -151,6 +151,11 @@ header .logo {
   letter-spacing: 0.05em;
 }
 
+.header-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 /* ============================================
    BUTTONS & INTERACTIVE ELEMENTS
    ============================================ */
@@ -162,7 +167,7 @@ button {
   cursor: pointer;
   transition: var(--transition-base);
   font-size: 0.9rem;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-xs) var(--space-md);
   border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
@@ -174,7 +179,7 @@ button {
   padding: var(--space-xs) var(--space-md);
 }
 
-#support-btn:hover {
+#support-btn:hover, #change-api-key-btn:hover {
   background-color: var(--bg-tertiary);
   border-color: var(--border-hover);
 }
@@ -540,9 +545,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================
-   SUPPORT MODAL
+   SUPPORT & API KEY MODALS
    ============================================ */
-#support-section {
+#support-section, #api-key-section {
   position: fixed;
   top: 0;
   left: 0;
@@ -635,6 +640,22 @@ input[type="range"]::-moz-range-thumb {
   height: 24px;
 }
 
+/* API Key Modal Specifics */
+.api-key-input-wrapper {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.api-key-input-wrapper input {
+  flex: 1;
+}
+
+.get-key-link {
+  font-size: 0.875rem;
+}
+
+
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
@@ -679,6 +700,10 @@ input[type="range"]::-moz-range-thumb {
   
   input, textarea, select {
     font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .api-key-input-wrapper {
+    flex-direction: column;
   }
 }
 

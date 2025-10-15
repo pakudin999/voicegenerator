@@ -8,6 +8,8 @@
 import { GoogleGenAI, Modality } from '@google/genai';
 
 // Global state
+let ai: GoogleGenAI | null = null;
+const API_KEY_STORAGE_KEY = 'google-ai-api-key';
 const generatedAssetUrls: {url: string; filename: string}[] = [];
 
 // Helper function to set loading state properly
@@ -43,6 +45,13 @@ const supportSection = document.querySelector(
 const closeSupportBtn = document.querySelector(
   '#close-support-btn',
 ) as HTMLButtonElement;
+
+// API Key Modal Elements
+const apiKeySection = document.querySelector('#api-key-section') as HTMLElement;
+const closeApiKeyBtn = document.querySelector('#close-api-key-btn') as HTMLButtonElement;
+const changeApiKeyBtn = document.querySelector('#change-api-key-btn') as HTMLButtonElement;
+const apiKeyInput = document.querySelector('#api-key-input') as HTMLInputElement;
+const saveApiKeyBtn = document.querySelector('#save-api-key-btn') as HTMLButtonElement;
 
 // Voice Mode Elements
 const voiceScriptInput = document.querySelector(
@@ -145,10 +154,11 @@ async function generateTTSAudio(
   voiceName: string,
 ): Promise<{url: string; filename: string} | null> {
   if (!text) return null;
+  if (!ai) {
+    throw new Error("API Key not initialized. Please set your API Key.");
+  }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
@@ -178,6 +188,11 @@ async function generateTTSAudio(
     }
   } catch (error) {
     console.error('Failed to generate TTS audio:', error);
+    // Check for API key specific error
+    if (error.message.includes('API key not valid')) {
+       showApiKeyModal('Your API Key is invalid. Please check and enter it again.');
+       localStorage.removeItem(API_KEY_STORAGE_KEY);
+    }
     throw error;
   }
 }
@@ -300,8 +315,40 @@ function handleHeaderScroll() {
   }
 }
 
+// API Key Management
+function showApiKeyModal(message?: string) {
+  apiKeySection.classList.remove('hidden');
+  generateButton.disabled = true;
+  globalStatusEl.textContent = message || 'API Key is required to begin.';
+  globalStatusEl.style.color = '#f472b6';
+}
+
+function hideApiKeyModal() {
+  apiKeySection.classList.add('hidden');
+}
+
+function saveAndInitializeApiKey(key: string) {
+  if (!key) {
+    showApiKeyModal('Please enter a valid API key.');
+    return;
+  }
+
+  try {
+    ai = new GoogleGenAI({ apiKey: key });
+    localStorage.setItem(API_KEY_STORAGE_KEY, key);
+    generateButton.disabled = false;
+    globalStatusEl.textContent = 'Ready to generate.';
+    globalStatusEl.style.color = 'var(--accent-primary)';
+    hideApiKeyModal();
+  } catch (e) {
+    console.error("Failed to initialize GoogleGenAI:", e);
+    showApiKeyModal('The API Key you entered is not valid. Please try again.');
+  }
+}
+
 // Event Listeners Setup
 function setupEventListeners() {
+  // Support Modal
   closeSupportBtn.addEventListener('click', () => {
     supportSection.classList.add('hidden');
   });
@@ -313,15 +360,42 @@ function setupEventListeners() {
     }
   });
 
-  // Main generate button
-  generateButton.addEventListener('click', generateVoice);
-
-  // Support button
   supportBtn.addEventListener('click', () => {
     window.open('https://www.tiktok.com/@konten_beban', '_blank');
   });
+
+  // API Key Modal
+  changeApiKeyBtn.addEventListener('click', () => {
+    apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+    showApiKeyModal();
+  });
+  
+  closeApiKeyBtn.addEventListener('click', hideApiKeyModal);
+  apiKeySection.addEventListener('click', (e) => {
+    if (e.target === apiKeySection) {
+      hideApiKeyModal();
+    }
+  });
+  
+  saveApiKeyBtn.addEventListener('click', () => {
+    saveAndInitializeApiKey(apiKeyInput.value.trim());
+  });
+  
+  // Main generate button
+  generateButton.addEventListener('click', generateVoice);
 }
 
 // App Initialization
-window.addEventListener('scroll', handleHeaderScroll);
-setupEventListeners();
+function initializeApp() {
+  setupEventListeners();
+  window.addEventListener('scroll', handleHeaderScroll);
+  
+  const storedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+  if (storedApiKey) {
+    saveAndInitializeApiKey(storedApiKey);
+  } else {
+    showApiKeyModal();
+  }
+}
+
+initializeApp();
