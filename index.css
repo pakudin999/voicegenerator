@@ -179,7 +179,7 @@ button {
   padding: var(--space-xs) var(--space-md);
 }
 
-#support-btn:hover, #change-api-key-btn:hover {
+#support-btn:hover {
   background-color: var(--bg-tertiary);
   border-color: var(--border-hover);
 }
@@ -260,15 +260,6 @@ button:disabled {
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.05em;
-}
-
-/* API Key Button inside panel */
-.api-key-management {
-  margin-bottom: var(--space-lg);
-}
-
-.api-key-management #change-api-key-btn {
-  width: 100%;
 }
 
 /* Form Inputs */
@@ -556,7 +547,7 @@ input[type="range"]::-moz-range-thumb {
 /* ============================================
    SUPPORT & API KEY MODALS
    ============================================ */
-#support-section, #api-key-section {
+#support-section {
   position: fixed;
   top: 0;
   left: 0;
@@ -649,22 +640,6 @@ input[type="range"]::-moz-range-thumb {
   height: 24px;
 }
 
-/* API Key Modal Specifics */
-.api-key-input-wrapper {
-  display: flex;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-
-.api-key-input-wrapper input {
-  flex: 1;
-}
-
-.get-key-link {
-  font-size: 0.875rem;
-}
-
-
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
@@ -709,10 +684,6 @@ input[type="range"]::-moz-range-thumb {
   
   input, textarea, select {
     font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  .api-key-input-wrapper {
-    flex-direction: column;
   }
 }
 
