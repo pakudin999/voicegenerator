@@ -184,16 +184,37 @@ async function generateTTSAudio(
       return {url: objectURL, filename};
     } else {
       console.warn('No audio content found in TTS response:', response);
-      return null;
+      throw new Error("The model did not return audio. This might be due to safety filters or an empty response.");
     }
   } catch (error) {
     console.error('Failed to generate TTS audio:', error);
-    // Check for API key specific error
-    if (error.message.includes('API key not valid')) {
-       showApiKeyModal('Your API Key is invalid. Please check and enter it again.');
-       localStorage.removeItem(API_KEY_STORAGE_KEY);
+
+    // Default user-friendly message
+    let userFriendlyMessage = 'An unexpected error occurred. Please try again.';
+
+    if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        const errorString = error.toString().toLowerCase();
+
+        if (errorMessage.includes('api key not valid')) {
+            showApiKeyModal('Your API Key is invalid. Please check and enter it again.');
+            localStorage.removeItem(API_KEY_STORAGE_KEY);
+            // Return null to stop processing; the modal is the primary feedback.
+            return null;
+        } else if (errorMessage.includes('rate limit') || errorString.includes('429')) {
+            userFriendlyMessage = "You've made too many requests recently. Please wait a moment before trying again.";
+        } else if (errorMessage.includes('invalid argument') || errorString.includes('400')) {
+            userFriendlyMessage = "Invalid request. Please check the script for unsupported characters or try a different voice.";
+        } else if (errorMessage.includes('server error') || errorString.includes('500') || errorString.includes('503')) {
+            userFriendlyMessage = "The AI server is experiencing issues. This is likely temporary. Please try again soon.";
+        } else {
+            // Use the original error message if it's not one of the caught cases.
+            userFriendlyMessage = error.message;
+        }
     }
-    throw error;
+    
+    // Throw a new error with the determined user-friendly message.
+    throw new Error(userFriendlyMessage);
   }
 }
 

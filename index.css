@@ -262,6 +262,15 @@ button:disabled {
   letter-spacing: 0.05em;
 }
 
+/* API Key Button inside panel */
+.api-key-management {
+  margin-bottom: var(--space-lg);
+}
+
+.api-key-management #change-api-key-btn {
+  width: 100%;
+}
+
 /* Form Inputs */
 input, textarea, select {
   background: var(--bg-primary);
